@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  Outlook Add-in Manifest - Email Link to Clipboard
+  ============================================================================
+  Purpose: Create a custom add-in for new Outlook that adds right-click
+           context menu options to copy email links
+  
+  Compatibility: Works with new Outlook and Outlook Web
+  
+  Installation: Host this manifest on a web server and sideload into Outlook
+  ============================================================================
+-->
+
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" 
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+           xsi:type="MailApp">
+  
+  <!-- Add-in metadata -->
+  <Id>12345678-1234-1234-1234-123456789012</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Email Link Assistant</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Email Link to Clipboard"/>
+  <Description DefaultValue="Copy Outlook email links (Desktop or Web format) to clipboard for use in Notion and other apps"/>
+  
+  <!-- Hosts define which Outlook clients this add-in works with -->
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+  
+  <!-- Default settings for the add-in -->
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/taskpane.html"/>
+  </DefaultSettings>
+  
+  <!-- Permissions this add-in needs -->
+  <Permissions>ReadWriteMailbox
+  </Permissions>
+  
+  <!-- Rule: When add-in should activate -->
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <!-- Activate when reading an email (single message) -->
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+  </Rule>
+
+  <!-- UI Surface Definitions -->
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/appforoffice/1.1.1" xsi:type="VersionOverridesV1_0">
+    
+    <Hosts>
+      <Host xsi:type="MailHost">
+        
+        <!-- Define the task pane -->
+        <DesktopFormFactor>
+          <FunctionFile resid="Commands.Function.Url"/>
+          
+          <!-- Context Menu Surface -->
+          <ExtensionPoint xsi:type="MessageReadCommandSurface">
+            
+            <!-- Group 1: Email Link Commands -->
+            <OfficeTab id="TabDefault">
+              <Group id="msgReadGroup">
+                <Label resid="GroupLabel"/>
+                
+                <!-- Button: Copy Desktop Link -->
+                <Control xsi:type="Button" id="DesktopLinkButton">
+                  <Label resid="DesktopLinkLabel"/>
+                  <Supertip>
+                    <Title resid="DesktopLinkTitle"/>
+                    <Description resid="DesktopLinkDesc"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="icon16"/>
+                    <bt:Image size="32" resid="icon32"/>
+                    <bt:Image size="80" resid="icon80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>copyDesktopLink</FunctionName>
+                  </Action>
+                </Control>
+                
+                <!-- Button: Copy Web Link -->
+                <Control xsi:type="Button" id="WebLinkButton">
+                  <Label resid="WebLinkLabel"/>
+                  <Supertip>
+                    <Title resid="WebLinkTitle"/>
+                    <Description resid="WebLinkDesc"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="icon16"/>
+                    <bt:Image size="32" resid="icon32"/>
+                    <bt:Image size="80" resid="icon80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>copyWebLink</FunctionName>
+                  </Action>
+                </Control>
+                
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+        
+      </Host>
+    </Hosts>
+    
+    <!-- Function definitions -->
+    <FunctionOverrides>
+      <FunctionOverride FunctionName="copyDesktopLink">
+        <SupportsSharedMailbox>true</SupportsSharedMailbox>
+      </FunctionOverride>
+      <FunctionOverride FunctionName="copyWebLink">
+        <SupportsSharedMailbox>true</SupportsSharedMailbox>
+      </FunctionOverride>
+    </FunctionOverrides>
+    
+    <!-- Resources/Strings -->
+    <Resources>
+      <bt:Images>
+        <bt:Image id="icon16" DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/assets/icon-16x16.png"/>
+        <bt:Image id="icon32" DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/assets/icon-32x32.png"/>
+        <bt:Image id="icon80" DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/assets/icon-80x80.png"/>
+      </bt:Images>
+      
+      <bt:Urls>
+        <bt:Url id="Commands.Function.Url" DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/commands.html"/>
+      </bt:Urls>
+      
+      <bt:ShortStrings>
+        <bt:String id="GroupLabel" DefaultValue="Email Link"/>
+        <bt:String id="DesktopLinkLabel" DefaultValue="Copy Desktop Link"/>
+        <bt:String id="DesktopLinkTitle" DefaultValue="Desktop Link"/>
+        <bt:String id="DesktopLinkDesc" DefaultValue="Copy outlook:// link to clipboard (opens in Outlook desktop app)"/>
+        <bt:String id="WebLinkLabel" DefaultValue="Copy Web Link"/>
+        <bt:String id="WebLinkTitle" DefaultValue="Web Link"/>
+        <bt:String id="WebLinkDesc" DefaultValue="Copy Outlook Web link to clipboard (opens in browser)"/>
+      </bt:ShortStrings>
+      
+      <bt:LongStrings>
+        <bt:String id="GroupLabel" DefaultValue="Email Link Assistant"/>
+      </bt:LongStrings>
+    </Resources>
+    
+  </VersionOverrides>
+
+</OfficeApp>

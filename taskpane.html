@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Email Link to Clipboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <!-- Office JavaScript API -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    
+    <!-- Fluent UI (Microsoft's design system) -->
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #0078d4;
+            padding-bottom: 16px;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .header p {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .content {
+            margin-bottom: 24px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .button-primary {
+            background-color: #0078d4;
+            color: white;
+        }
+        
+        .button-primary:hover {
+            background-color: #106ebe;
+        }
+        
+        .button-secondary {
+            background-color: #e7e7e7;
+            color: #333;
+        }
+        
+        .button-secondary:hover {
+            background-color: #d0d0d0;
+        }
+        
+        .icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+        }
+        
+        .status {
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status.show {
+            display: flex;
+        }
+        
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .info-box {
+            background-color: #f0f7ff;
+            border: 1px solid #b4d6ff;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.5;
+        }
+        
+        .info-box strong {
+            color: #0078d4;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #e7e7e7;
+            margin: 16px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            margin-top: 16px;
+        }
+        
+        .email-info {
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            display: none;
+        }
+        
+        .email-info.show {
+            display: block;
+        }
+        
+        .email-info-label {
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .email-info-value {
+            color: #333;
+            word-break: break-all;
+            background-color: white;
+            padding: 6px;
+            border-radius: 2px;
+            border: 1px solid #ddd;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📧 Email Link</h1>
+            <p>Copy link to clipboard</p>
+        </div>
+        
+        <!-- Status Messages -->
+        <div id="status" class="status"></div>
+        
+        <!-- Email Info Display -->
+        <div id="emailInfo" class="email-info">
+            <div class="email-info-label">Current Email:</div>
+            <div class="email-info-value" id="emailSubject"></div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <h3 style="font-size: 14px; color: #333; margin-bottom: 12px;">Select Link Type:</h3>
+            
+            <!-- Button Group -->
+            <div class="button-group">
+                <!-- Desktop Link Button -->
+                <button class="button button-primary" id="desktopLinkBtn" onclick="copyDesktopLink()">
+                    <span class="icon">🖥️</span>
+                    <span>Copy Desktop Link</span>
+                </button>
+                
+                <!-- Web Link Button -->
+                <button class="button button-primary" id="webLinkBtn" onclick="copyWebLink()">
+                    <span class="icon">🌐</span>
+                    <span>Copy Web Link</span>
+                </button>
+            </div>
+            
+            <!-- Info Box -->
+            <div class="info-box">
+                <strong>Desktop Link:</strong>
+                Opens in Outlook desktop application (format: <code>outlook://mail/...</code>)
+                <br><br>
+                <strong>Web Link:</strong>
+                Opens in Outlook Web / Office 365 (format: <code>https://outlook.office.com/...</code>)
+            </div>
+        </div>
+        
+        <!-- Divider -->
+        <div class="divider"></div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Select an email and click a button to copy its link.</p>
+            <p style="margin-top: 8px; color: #ccc;">Email Link to Clipboard v1.0</p>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script>
+        // Initialize Office Add-in
+        Office.onReady(() => {
+            console.log("Outlook Add-in initialized");
+            updateEmailInfo();
+            
+            // Update email info when selection changes
+            Office.context.mailbox.addHandlerAsync(
+                Office.EventType.ItemChanged,
+                updateEmailInfo
+            );
+        });
+        
+        /**
+         * Update displayed email information
+         */
+        function updateEmailInfo() {
+            try {
+                const item = Office.context.mailbox.item;
+                
+                if (item && item.subject) {
+                    document.getElementById('emailSubject').textContent = item.subject;
+                    document.getElementById('emailInfo').classList.add('show');
+                } else {
+                    document.getElementById('emailInfo').classList.remove('show');
+                }
+            } catch (error) {
+                console.error("Error updating email info:", error);
+            }
+        }
+        
+        /**
+         * Copy Desktop Link to Clipboard
+         */
+        async function copyDesktopLink() {
+            try {
+                const item = Office.context.mailbox.item;
+                
+                if (!item) {
+                    showStatus("No email selected. Please select an email first.", "error");
+                    return;
+                }
+                
+                // Get item ID
+                const itemId = item.itemId;
+                
+                // Convert to hex
+                const hexId = stringToHex(itemId);
+                
+                // Build desktop link
+                const desktopLink = `outlook://mail/entryid=${hexId}`;
+                
+                // Copy to clipboard
+                await copyToClipboard(desktopLink);
+                
+                // Show success
+                showStatus(`✓ Desktop link copied for: "${item.subject}"`, "success");
+                
+                console.log("Desktop link:", desktopLink);
+                
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, "error");
+                console.error("Error copying desktop link:", error);
+            }
+        }
+        
+        /**
+         * Copy Web Link to Clipboard
+         */
+        async function copyWebLink() {
+            try {
+                const item = Office.context.mailbox.item;
+                
+                if (!item) {
+                    showStatus("No email selected. Please select an email first.", "error");
+                    return;
+                }
+                
+                // Build web link (Office 365 / Outlook Web)
+                // This is the base OWA URL - individual messages can be accessed via search
+                const webLink = "https://outlook.office.com/mail/inbox";
+                
+                // Alternative: If you have the message ID, you could use:
+                // const webLink = `https://outlook.office.com/mail/search/all?q=${item.subject}`;
+                
+                // Copy to clipboard
+                await copyToClipboard(webLink);
+                
+                // Show success
+                showStatus(`✓ Web link copied for: "${item.subject}"`, "success");
+                
+                console.log("Web link:", webLink);
+                
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, "error");
+                console.error("Error copying web link:", error);
+            }
+        }
+        
+        /**
+         * Helper: Copy text to clipboard
+         */
+        async function copyToClipboard(text) {
+            // Try modern Clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (err) {
+                    console.warn("Clipboard API failed, trying fallback...");
+                }
+            }
+            
+            // Fallback: textarea method
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            textarea.style.top = "0";
+            textarea.style.left = "0";
+            document.body.appendChild(textarea);
+            
+            try {
+                textarea.select();
+                const success = document.execCommand("copy");
+                if (!success) {
+                    throw new Error("execCommand failed");
+                }
+                return true;
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+        
+        /**
+         * Helper: Convert string to hex
+         */
+        function stringToHex(str) {
+            let hex = "";
+            for (let i = 0; i < str.length; i++) {
+                const charCode = str.charCodeAt(i);
+                const hexChar = charCode.toString(16).toUpperCase();
+                hex += hexChar.padStart(2, "0");
+            }
+            return hex;
+        }
+        
+        /**
+         * Helper: Show status message
+         */
+        function showStatus(message, type = "info") {
+            const statusDiv = document.getElementById("status");
+            statusDiv.textContent = message;
+            statusDiv.className = `status show ${type}`;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.classList.remove("show");
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
