@@ -2,22 +2,144 @@
 <html>
 <head>
     <meta charset="UTF-8" />
-    <title>Email Link Commands</title>
+    <title>Commands</title>
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-    <script src="commands.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
-        .success { background-color: #d4edda; color: #155724; }
-        .error { background-color: #f8d7da; color: #721c24; }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Email Link Commands</h1>
-        <div id="status"></div>
-        <p>This page runs the functions for the Email Link add-in.</p>
-    </div>
+    <!-- This page is not displayed to the user -->
+    <!-- It only runs the Office JavaScript functions -->
+    
+    <script>
+        // Office Add-in initialization
+        Office.onReady(() => {
+            console.log("Commands page loaded and Office.js ready");
+            // Required for Outlook Web: associate function names with implementations
+            Office.actions.associate("copyDesktopLink", copyDesktopLink);
+            Office.actions.associate("copyWebLink", copyWebLink);
+        });
+
+        /**
+         * Function: Copy Desktop Link
+         * Called when user clicks "Copy Desktop Link" button
+         */
+        function copyDesktopLink(event) {
+            try {
+                // Get the current email item
+                const item = Office.context.mailbox.item;
+
+                if (!item) {
+                    event.completed({ allowEvent: false });
+                    return;
+                }
+
+                // Get the Entry ID
+                const itemId = item.itemId;
+
+                // Convert to hex format
+                const hexId = stringToHex(itemId);
+
+                // Build the desktop link
+                const desktopLink = `outlook://mail/entryid=${hexId}`;
+
+                // Copy to clipboard
+                copyToClipboard(desktopLink);
+
+                // Show notification (optional)
+                console.log("Desktop link copied:", desktopLink);
+
+                // Complete the command
+                event.completed();
+
+            } catch (error) {
+                console.error("Error copying desktop link:", error);
+                event.completed({ allowEvent: false });
+            }
+        }
+
+        /**
+         * Function: Copy Web Link
+         * Called when user clicks "Copy Web Link" button
+         */
+        function copyWebLink(event) {
+            try {
+                // Get the current email item
+                const item = Office.context.mailbox.item;
+
+                if (!item) {
+                    event.completed({ allowEvent: false });
+                    return;
+                }
+
+                // Build the web link (Office 365 / Outlook Web)
+                const webLink = "https://outlook.office.com/mail/inbox";
+
+                // Copy to clipboard
+                copyToClipboard(webLink);
+
+                // Log for debugging
+                console.log("Web link copied:", webLink);
+
+                // Complete the command
+                event.completed();
+
+            } catch (error) {
+                console.error("Error copying web link:", error);
+                event.completed({ allowEvent: false });
+            }
+        }
+
+        /**
+         * Helper: Copy text to clipboard
+         */
+        function copyToClipboard(text) {
+            // Try modern Clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .catch(err => {
+                        console.error("Clipboard API failed:", err);
+                        fallbackCopy(text);
+                    });
+            } else {
+                // Fallback for older browsers
+                fallbackCopy(text);
+            }
+        }
+
+        /**
+         * Helper: Fallback clipboard method
+         */
+        function fallbackCopy(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            textarea.style.top = "0";
+            textarea.style.left = "0";
+            document.body.appendChild(textarea);
+
+            try {
+                textarea.select();
+                document.execCommand("copy");
+                console.log("Text copied via fallback method");
+            } catch (err) {
+                console.error("Fallback copy failed:", err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        /**
+         * Helper: Convert string to hex format
+         */
+        function stringToHex(str) {
+            let hex = "";
+            for (let i = 0; i < str.length; i++) {
+                const charCode = str.charCodeAt(i);
+                const hexChar = charCode.toString(16).toUpperCase();
+                hex += hexChar.padStart(2, "0");
+            }
+            return hex;
+        }
+    </script>
 </body>
 </html>
