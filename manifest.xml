@@ -1,69 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ============================================================================
-  Outlook Add-in Manifest - Email Link to Clipboard
+  Outlook Mail Add-in Manifest - Email Link to Clipboard
   ============================================================================
-  Purpose: Create a custom add-in for new Outlook that adds right-click
-           context menu options to copy email links
-  
+  Purpose: Create a custom add-in for Outlook that copies email links
+           to clipboard for use in Notion and other applications
+
   Compatibility: Works with new Outlook and Outlook Web
-  
-  Installation: Host this manifest on a web server and sideload into Outlook
+
+  Installation: Host files on GitHub (or your web server) and sideload into Outlook
   ============================================================================
 -->
 
-<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" 
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-		   xmlns:bt="http://schemas.microsoft.com/office/appforoffice/1.3/taskpaneapp"
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides"
            xsi:type="MailApp">
-  
-  <!-- Add-in metadata -->
+
+  <!-- Unique identifier for this add-in -->
   <Id>bdca79f3-e1d3-43a1-800f-851cf5fd037a</Id>
   <Version>1.0.0.0</Version>
   <ProviderName>Email Link Assistant</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Email Link to Clipboard"/>
-  <Description DefaultValue="Copy Outlook email links (Desktop or Web format) to clipboard for use in Notion and other apps"/>
-  
-  <!-- Hosts define which Outlook clients this add-in works with -->
+  <Description DefaultValue="Copy Outlook email links (Desktop or Web format) to clipboard for use in Notion and other applications"/>
+
+  <!-- Icons: IconUrl (standard) and HighResolutionIconUrl (HiDPI) -->
+  <IconUrl DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/assets/icon-80x80.png"/>
+  <HighResolutionIconUrl DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/assets/icon-128x128.png"/>
+
+  <!-- Support URL -->
+  <SupportUrl DefaultValue="https://github.com/ryanforsythe/outlook-link-generator"/>
+
   <Hosts>
     <Host Name="Mailbox"/>
   </Hosts>
-  
-  <!-- Default settings for the add-in -->
-  <DefaultSettings>
-    <SourceLocation DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/taskpane.html"/>
-  </DefaultSettings>
-  
-  <!-- Permissions this add-in needs -->
-  <Permissions>ReadWriteMailbox
-  </Permissions>
-  
-  <!-- Rule: When add-in should activate -->
+
+  <!-- Requirements: Minimum API requirements -->
+  <Requirements>
+    <Sets>
+      <Set Name="Mailbox" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+
+  <!-- Form Settings for Mail Add-in -->
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/taskpane.html"/>
+        <RequestedHeight>250</RequestedHeight>
+      </DesktopSettings>
+      <TabletSettings>
+        <SourceLocation DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/taskpane.html"/>
+        <RequestedHeight>250</RequestedHeight>
+      </TabletSettings>
+      <PhoneSettings>
+        <SourceLocation DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/taskpane.html"/>
+      </PhoneSettings>
+    </Form>
+  </FormSettings>
+
+  <!-- Required permissions -->
+  <Permissions>ReadWriteMailbox</Permissions>
+
+  <!-- Activation rule: Only activate when reading emails -->
   <Rule xsi:type="RuleCollection" Mode="Or">
-    <!-- Activate when reading an email (single message) -->
     <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
   </Rule>
 
-  <!-- UI Surface Definitions -->
-  <VersionOverrides xmlns="http://schemas.microsoft.com/office/appforoffice/1.1.1" xsi:type="VersionOverridesV1_0">
-    
+  <!-- Version overrides for UI and functionality -->
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides"
+                   xsi:type="VersionOverridesV1_0">
+
     <Hosts>
       <Host xsi:type="MailHost">
-        
-        <!-- Define the task pane -->
+
+        <!-- Desktop (Windows Outlook) UI -->
         <DesktopFormFactor>
+
+          <!-- Location of the function file -->
           <FunctionFile resid="Commands.Function.Url"/>
-          
-          <!-- Context Menu Surface -->
+
+          <!-- Message reading surface: buttons appear when reading an email -->
           <ExtensionPoint xsi:type="MessageReadCommandSurface">
-            
-            <!-- Group 1: Email Link Commands -->
+
+            <!-- Ribbon tab where buttons appear -->
             <OfficeTab id="TabDefault">
               <Group id="msgReadGroup">
                 <Label resid="GroupLabel"/>
-                
-                <!-- Button: Copy Desktop Link -->
+
+                <!-- First button: Copy Desktop Link -->
                 <Control xsi:type="Button" id="DesktopLinkButton">
                   <Label resid="DesktopLinkLabel"/>
                   <Supertip>
@@ -79,8 +106,8 @@
                     <FunctionName>copyDesktopLink</FunctionName>
                   </Action>
                 </Control>
-                
-                <!-- Button: Copy Web Link -->
+
+                <!-- Second button: Copy Web Link -->
                 <Control xsi:type="Button" id="WebLinkButton">
                   <Label resid="WebLinkLabel"/>
                   <Supertip>
@@ -96,52 +123,47 @@
                     <FunctionName>copyWebLink</FunctionName>
                   </Action>
                 </Control>
-                
+
               </Group>
             </OfficeTab>
           </ExtensionPoint>
         </DesktopFormFactor>
-        
+
       </Host>
     </Hosts>
-    
-    <!-- Function definitions -->
-    <FunctionOverrides>
-      <FunctionOverride FunctionName="copyDesktopLink">
-        <SupportsSharedMailbox>true</SupportsSharedMailbox>
-      </FunctionOverride>
-      <FunctionOverride FunctionName="copyWebLink">
-        <SupportsSharedMailbox>true</SupportsSharedMailbox>
-      </FunctionOverride>
-    </FunctionOverrides>
-    
-    <!-- Resources/Strings -->
+
+    <!-- Resources: Strings and images -->
     <Resources>
+      <!-- Image resources (16x16, 32x32, 80x80, 128x128 PNG files) -->
       <bt:Images>
-        <bt:Image id="icon16" DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/assets/icon-16x16.png"/>
-        <bt:Image id="icon32" DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/assets/icon-32x32.png"/>
-        <bt:Image id="icon80" DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/assets/icon-80x80.png"/>
+        <bt:Image id="icon16" DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/assets/icon-16x16.png"/>
+        <bt:Image id="icon32" DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/assets/icon-32x32.png"/>
+        <bt:Image id="icon80" DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/assets/icon-80x80.png"/>
+        <bt:Image id="icon128" DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/assets/icon-128x128.png"/>
       </bt:Images>
-      
+
+      <!-- URL resources -->
       <bt:Urls>
-        <bt:Url id="Commands.Function.Url" DefaultValue="https://github.com/ryanforsythe/outlook-link-generator/commands.html"/>
+        <bt:Url id="Commands.Function.Url" DefaultValue="https://ryanforsythe.github.io/outlook-link-generator/commands.html"/>
       </bt:Urls>
-      
+
+      <!-- Short strings (labels and tooltips) -->
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Email Link"/>
-        <bt:String id="DesktopLinkLabel" DefaultValue="Copy Desktop Link"/>
-        <bt:String id="DesktopLinkTitle" DefaultValue="Desktop Link"/>
+        <bt:String id="DesktopLinkLabel" DefaultValue="Desktop Link"/>
+        <bt:String id="DesktopLinkTitle" DefaultValue="Copy Desktop Link"/>
         <bt:String id="DesktopLinkDesc" DefaultValue="Copy outlook:// link to clipboard (opens in Outlook desktop app)"/>
-        <bt:String id="WebLinkLabel" DefaultValue="Copy Web Link"/>
-        <bt:String id="WebLinkTitle" DefaultValue="Web Link"/>
+        <bt:String id="WebLinkLabel" DefaultValue="Web Link"/>
+        <bt:String id="WebLinkTitle" DefaultValue="Copy Web Link"/>
         <bt:String id="WebLinkDesc" DefaultValue="Copy Outlook Web link to clipboard (opens in browser)"/>
       </bt:ShortStrings>
-      
+
+      <!-- Long strings (extended descriptions) -->
       <bt:LongStrings>
-        <bt:String id="GroupLabel" DefaultValue="Email Link Assistant"/>
+        <bt:String id="GroupLabelLong" DefaultValue="Email Link Assistant - Copy email links to clipboard"/>
       </bt:LongStrings>
     </Resources>
-    
+
   </VersionOverrides>
 
 </OfficeApp>
